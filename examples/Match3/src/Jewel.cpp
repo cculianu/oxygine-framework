@@ -36,6 +36,7 @@ int     Jewel::getType() const
 
 void Jewel::explode()
 {
+    if (_exploding) return;
     _exploding = true;
     float angle = 360 * (rand() % 2 ? -1 : 1);
     spTween tween = _view->addTween(Actor::TweenRotationDegrees(angle), 500);

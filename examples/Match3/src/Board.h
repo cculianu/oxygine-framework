@@ -24,10 +24,14 @@ public:
 
     spActor getView();
 
+    bool allowDiagonalMoves = true; // added by Calin to support diagonal move
+    bool allowDiagonalMatch = true; // added by Calin to support dialonal match
 
 private:
 
-    space* getSpace(const Point& pos, bool check = true);
+    enum class SpaceSelect { Any = 0, InPlayOnly, InPlayButAllowExploding };
+
+    space* getSpace(const Point& pos, SpaceSelect sel = SpaceSelect::InPlayOnly);
 
     void update(const UpdateState& us);
 

@@ -80,7 +80,7 @@ void Board::swapped(Event* event)
     }
 }
 
-space* Board::getSpace(const Point& pos, bool check)
+space* Board::getSpace(const Point& pos, SpaceSelect spaceSelect)
 {
     if (pos.x < 0 || pos.x >= _size.x)
         return 0;
@@ -88,11 +88,11 @@ space* Board::getSpace(const Point& pos, bool check)
         return 0;
 
     space& sp = _field[pos.x + pos.y * _size.x];
-    if (check)
+    if (spaceSelect != SpaceSelect::Any)
     {
         if (!sp.jewel)
             return 0;
-        if (sp.jewel->isExploding())
+        if (spaceSelect != SpaceSelect::InPlayButAllowExploding && sp.jewel->isExploding())
             return 0;
         if (sp.jewel->isSwaping())
             return 0;
@@ -111,13 +111,27 @@ const Point dirRight(1, 0);
 
 void Board::findMatches(std::vector<space*>& spaces, space& sp)
 {
-    std::vector<space*> hor;
-    findMatches(hor, sp, dirUp);
-    findMatches(hor, sp, dirDown);
-
     std::vector<space*> ver;
-    findMatches(ver, sp, dirLeft);
-    findMatches(ver, sp, dirRight);
+    findMatches(ver, sp, dirUp);
+    findMatches(ver, sp, dirDown);
+
+    std::vector<space*> hor;
+    findMatches(hor, sp, dirLeft);
+    findMatches(hor, sp, dirRight);
+
+    // Added by Calin for diagonal play
+    std::vector<space*> diagtlbr;
+    if (allowDiagonalMatch) {
+        findMatches(diagtlbr, sp, dirUp + dirLeft);
+        findMatches(diagtlbr, sp, dirDown + dirRight);
+    }
+
+    // Added by Calin for diagonal play
+    std::vector<space*> diagtrbl;
+    if (allowDiagonalMatch) {
+        findMatches(diagtrbl, sp, dirUp + dirRight);
+        findMatches(diagtrbl, sp, dirDown + dirLeft);
+    }
 
     if (hor.size() >= 2)
     {
@@ -127,6 +141,16 @@ void Board::findMatches(std::vector<space*>& spaces, space& sp)
     if (ver.size() >= 2)
     {
         spaces.insert(spaces.end(), ver.begin(), ver.end());
+    }
+
+    if (diagtlbr.size() >= 2)
+    {
+        spaces.insert(spaces.end(), diagtlbr.begin(), diagtlbr.end());
+    }
+
+    if (diagtrbl.size() >= 2)
+    {
+        spaces.insert(spaces.end(), diagtrbl.begin(), diagtrbl.end());
     }
 
     if (!spaces.empty())
@@ -151,26 +175,31 @@ void Board::findMatches(std::vector<space*>& spaces, space& sp, const Point& dir
 
 void Board::update(const UpdateState& us)
 {
+    // match puzzle completions
     for (int y = 0; y < _size.y; ++y)
     {
         for (int x = 0; x < _size.x; ++x)
         {
-            space* sp = getSpace(Point(x, y));
+            space* sp = getSpace(Point(x, y), SpaceSelect::InPlayButAllowExploding);
             if (!sp)
                 continue;
 
             std::vector<space*> spaces;
             findMatches(spaces, *sp);
 
-            for (size_t i = 0; i < spaces.size(); ++i)
+            for (space *s : spaces)
             {
-                space* s = spaces[i];
-                s->jewel->explode();
+                if (!s->jewel->isExploding())
+                {
+
+                    s->jewel->explode();
+                }
             }
 
         }
     }
 
+    // kill dead pieces
     for (int y = 0; y < _size.y; ++y)
     {
         for (int x = 0; x < _size.x; ++x)
@@ -186,7 +215,7 @@ void Board::update(const UpdateState& us)
         }
     }
 
-
+    // create new pieces and let them fall into place
     for (int x = 0; x < _size.x; ++x)
     {
         float last_y = 0;
@@ -199,7 +228,7 @@ void Board::update(const UpdateState& us)
                 spJewel fallJewel;
                 for (int ty = y - 1; ty >= 0; --ty)
                 {
-                    space* fall = getSpace(Point(x, ty), false);
+                    space* fall = getSpace(Point(x, ty), SpaceSelect::Any);
                     if (!fall->jewel)
                         continue;
 
@@ -253,7 +282,8 @@ void Board::touched(Event* event)
         {
             Point dir = _selected->pos - sp->pos;
             if (dir.x == 0 && abs(dir.y) == 1 ||
-                    dir.y == 0 && abs(dir.x) == 1)
+                    dir.y == 0 && abs(dir.x) == 1
+                /* added by Calin to support diagonals */ || allowDiagonalMoves && abs(dir.y) == 1 && abs(dir.x) == 1)
             {
                 spTween tween = swap(*_selected, *sp);
                 tween->setDoneCallback(CLOSURE(this, &Board::swapped));
