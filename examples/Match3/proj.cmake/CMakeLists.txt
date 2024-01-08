@@ -7,7 +7,9 @@ include_directories(${OXYGINE_INCLUDE_DIRS})
 find_package(SDL2 REQUIRED)
 link_directories(${OXYGINE_LIBRARY_DIRS})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OXYGINE_CXX_FLAGS}")
+# Set the C++ standard to C++20
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(Match3 ../src/Board.cpp ../src/Jewel.cpp ../src/example.cpp ../src/main.cpp ../src/shared.cpp  ../src/Board.h ../src/Jewel.h ../src/example.h ../src/shared.h )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
