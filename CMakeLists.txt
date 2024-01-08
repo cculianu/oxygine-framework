@@ -1,6 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 project (OXYGINE)
 
+# Set the C++ standard to C++20
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(OX_HAVE_LIBJPEG 0)
 set(OX_HAVE_LIBPNG 0)
@@ -235,7 +238,7 @@ endif(NOT EMSCRIPTEN)
 
 
 if (NOT MSVC)
-	set(OXYGINE_CXX_FLAGS "${OXYGINE_CXX_FLAGS} -std=c++11 ")
+	set(OXYGINE_CXX_FLAGS "${OXYGINE_CXX_FLAGS}")
 endif(NOT MSVC)
 
 set(CMAKE_CXX_FLAGS ${OXYGINE_CXX_FLAGS})
