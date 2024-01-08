@@ -37,7 +37,7 @@ namespace oxygine
         return r;
     }
 
-    RenderStateCache::RenderStateCache(): _blend(blend_disabled), _program(0)
+    RenderStateCache::RenderStateCache() : _blend(blend_disabled), _program(0)
     {
         reset();
     }
@@ -50,11 +50,10 @@ namespace oxygine
     void RenderStateCache::reset()
     {
         resetTextures();
-
+        resetShader();
         _blend = blend_disabled;
         if (_driver)
             _driver->setState(IVideoDriver::STATE_BLEND, 0);
-        _program = 0;
     }
 
     void RenderStateCache::resetTextures()
@@ -63,20 +62,33 @@ namespace oxygine
             _textures[i] = 0;
     }
 
+    void RenderStateCache::resetShader()
+    {
+        _program = 0;
+    }
+
+    void RenderStateCache::checkTextures()
+    {
+#ifdef OX_DEBUG
+        for (int i = 0; i < MAX_TEXTURES; ++i)
+        {
+            if (_textures[i] && _driver == IVideoDriver::instance)
+            {
+                GLint whichID;
+                oxglActiveTexture(GL_TEXTURE0 + i);
+                glGetIntegerv(GL_TEXTURE_BINDING_2D, &whichID);
+
+                OX_ASSERT(_textures[i]->getHandle() == (nativeTextureHandle)(size_t)whichID);
+            }
+        }
+#endif
+    }
+
     void RenderStateCache::setTexture(int sampler, const spNativeTexture& t)
     {
         OX_ASSERT(sampler < MAX_TEXTURES);
 
-#ifdef OX_DEBUG
-        if (_textures[sampler] && _driver == IVideoDriver::instance)
-        {
-            GLint whichID;
-            oxglActiveTexture(GL_TEXTURE0 + sampler);
-            glGetIntegerv(GL_TEXTURE_BINDING_2D, &whichID);
-
-            OX_ASSERT(_textures[sampler]->getHandle() == (nativeTextureHandle)(size_t)whichID);
-        }
-#endif
+        checkTextures();
 
         if (_textures[sampler] == t)
             return;
@@ -112,11 +124,22 @@ namespace oxygine
 
     bool RenderStateCache::setShader(ShaderProgram* prog)
     {
+#ifdef OX_DEBUG
+        if (_program && _driver == IVideoDriver::instance)
+        {
+            GLint whichID;
+            glGetIntegerv(GL_CURRENT_PROGRAM, &whichID);
+
+            OX_ASSERT((size_t)_program->getID() == (size_t)whichID);
+        }
+#endif
+
         if (_program == prog)
             return false;
 
         _program = prog;
-        _driver->setShaderProgram(prog);
+        if (prog)
+            _driver->setShaderProgram(prog);
         return true;
     }
 
@@ -289,7 +312,7 @@ namespace oxygine
 
     void STDRenderer::setShader(ShaderProgram* prog)
     {
-        if (rsCache().setShader(prog))
+        if (rsCache().setShader(prog)) {}
         {
             //_driver->setUniform("mat", _vp);
             shaderProgramChanged();
@@ -392,10 +415,16 @@ namespace oxygine
         _vdecl = decl;
     }
 
-    void STDRenderer::addVertices(const void* data, unsigned int size)
+    void STDRenderer::addVertices(const void* data, unsigned int bufSize)
     {
-        xaddVertices(data, size);
+        xaddVertices(data, bufSize);
         checkDrawBatch();
+    }
+
+    void STDRenderer::addIndices(const unsigned short* data, unsigned int bufSize)
+    {
+        const unsigned char* end = (const unsigned char*)data + bufSize;
+        _indicesData.insert(_indicesData.end(), (const unsigned short*)data, (const unsigned short*)end);
     }
 
     void STDRenderer::xaddVertices(const void* data, unsigned int size)
@@ -472,7 +501,7 @@ namespace oxygine
 
 
 
-    STDRenderer::STDRenderer(IVideoDriver* driver) : _driver(driver), _vdecl(0), _uberShader(0)
+    STDRenderer::STDRenderer(IVideoDriver* driver) : _driver(driver), _vdecl(0), _uberShader(0), _useCustomIndices(false)
     {
         if (!driver)
             driver = IVideoDriver::instance;
@@ -522,6 +551,11 @@ namespace oxygine
         std::swap(data, _verticesData);
     }
 
+
+    void STDRenderer::swapIndicesData(std::vector<unsigned short>& data)
+    {
+        std::swap(data, _indicesData);
+    }
 
     void STDRenderer::setTransform(const Transform& tr)
     {
@@ -592,15 +626,31 @@ namespace oxygine
 
     void STDRenderer::flush()
     {
-        size_t indices = (_verticesData.size() / sizeof(vertexPCT2) * 3) / 2;
-        if (!indices)
-            return;
+        if (_useCustomIndices)
+        {
+            size_t indices = _indicesData.size();
+            if (!indices)
+                return;
 
-        _driver->draw(IVideoDriver::PT_TRIANGLES, _vdecl,
-                      &_verticesData.front(), (unsigned int)_verticesData.size(),
-                      &STDRenderer::indices16.front(), (unsigned int)indices);
+            _driver->draw(IVideoDriver::PT_TRIANGLES, _vdecl,
+                          &_verticesData.front(), (unsigned int)_verticesData.size(),
+                          &_indicesData.front(), (unsigned int)_indicesData.size());
 
-        _verticesData.clear();
+            _verticesData.clear();
+            _indicesData.clear();
+        }
+        else
+        {
+            size_t indices = (_verticesData.size() / sizeof(vertexPCT2) * 3) / 2;
+            if (!indices)
+                return;
+
+            _driver->draw(IVideoDriver::PT_TRIANGLES, _vdecl,
+                          &_verticesData.front(), (unsigned int)_verticesData.size(),
+                          &STDRenderer::indices16.front(), (unsigned int)indices);
+
+            _verticesData.clear();
+        }
     }
 
 
@@ -615,6 +665,15 @@ namespace oxygine
     void STDRenderer::setBaseShaderFlags(unsigned int fl)
     {
         _baseShaderFlags = fl;
+    }
+
+    void STDRenderer::setUseCustomIndices(bool customIndicesEnabled)
+    {
+        if (_useCustomIndices != customIndicesEnabled)
+            flush();
+        _useCustomIndices = customIndicesEnabled;
+
+        maxVertices = _useCustomIndices ? -1 : indices16.size() / 3 * 2;
     }
 
 }

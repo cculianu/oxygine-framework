@@ -435,7 +435,8 @@ namespace oxygine
             Resources::registerResourceType(ResStarlingAtlas::create, "starling");
 
             STDRenderer::instance = new STDRenderer;
-            STDRenderDelegate::instance = new STDRenderDelegate;
+            if (!STDRenderDelegate::instance)
+                STDRenderDelegate::instance = new STDRenderDelegate;
             Material::null       = new NullMaterialX;
             Material::current = Material::null;
 
@@ -752,7 +753,7 @@ namespace oxygine
 #ifndef OXYGINE_EDITOR
             key::update();
 #endif
-            
+
             Point ds = getDisplaySize();
             //logs::messageln("SDL_GL_GetDrawableSize: %d %d", ds.x, ds.y);
 
@@ -848,7 +849,7 @@ namespace oxygine
 #elif EMSCRIPTEN
             EM_ASM_INT(
             {
-                var url = Pointer_stringify($0);
+                var url = UTF8ToString($0);
                 window.open(url, '_blank');
             }, str);
 #elif __APPLE__
@@ -914,7 +915,7 @@ namespace oxygine
         {
             case ep_show_error:
                 logs::error_va(format, args);
-                 OX_ASSERT_NL(!"handleErrorPolicy error.");
+                OX_ASSERT_NL(!"handleErrorPolicy error.");
                 break;
             case ep_show_warning:
                 logs::warning_va(format, args);
