@@ -17,9 +17,14 @@ namespace oxygine
 {
 	namespace file
 	{
-		std::string getSupportFolder()
-		{
+	std::string getSupportFolder()
+	{
             NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
+            if (bundleID == nil)
+            {
+                // Not in a bundle, return empty string
+                return {};
+            }
             NSFileManager*fm = [NSFileManager defaultManager];
             NSURL*    dirPath = nil;
             
@@ -39,8 +44,7 @@ namespace oxygine
                                    attributes:nil error:&theError])
                 {
                     // Handle the error.
-                    
-                    return nil;
+                    return {};
                 }
             }
             

@@ -4,12 +4,16 @@ project (Match3)
 add_subdirectory(../../../ oxygine-framework)
 add_definitions(${OXYGINE_DEFINITIONS})
 include_directories(${OXYGINE_INCLUDE_DIRS})
+find_package(SDL2 REQUIRED)
 link_directories(${OXYGINE_LIBRARY_DIRS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OXYGINE_CXX_FLAGS}")
 
 add_executable(Match3 ../src/Board.cpp ../src/Jewel.cpp ../src/example.cpp ../src/main.cpp ../src/shared.cpp  ../src/Board.h ../src/Jewel.h ../src/example.h ../src/shared.h )
-target_link_libraries(Match3 ${OXYGINE_CORE_LIBS})
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(EXTRA_LIBS "-framework AppKit")
+endif()
+target_link_libraries(Match3 ${OXYGINE_CORE_LIBS} SDL2::SDL2 SDL2::SDL2main ${EXTRA_LIBS})
 
 
 

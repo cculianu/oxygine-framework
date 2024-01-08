@@ -1,8 +1,8 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 #include "HttpRequestCocoaTask.h"
-#include "file.h"
-#include "STDFileSystem.h"
+#include "../file.h"
+#include "../STDFileSystem.h"
 #include "../log.h"
 using namespace oxygine;
 static char taskKey;

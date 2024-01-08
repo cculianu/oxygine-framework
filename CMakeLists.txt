@@ -9,7 +9,7 @@ set(OX_HAVE_HTTP 0)
 set(OX_USE_SDL2 1)
 
 
-find_package(OpenGL)
+find_package(OpenGL REQUIRED)
 
 if (EMSCRIPTEN)
 	#don't need SDL2
@@ -46,7 +46,9 @@ if (EMSCRIPTEN)
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux") 	
 	set(PLATFORM linux)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	set(PLATFORM ios)
+    # Uncomment one of the two depending on iOS vs MacOSX
+    #set(PLATFORM ios)
+    set(PLATFORM macosx)
 elseif(MSVC)
 	set(PLATFORM win32)
 elseif(MINGW)	
@@ -78,6 +80,9 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	set(OX_HAVE_LIBPNG 1)
 
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(OX_HAVE_LIBJPEG 1)
+    set(OX_HAVE_LIBPNG 1)
+    set(SOURCES ${OXYGINE_SRC}/core/ios/HttpRequestCocoaTask.mm ${OXYGINE_SRC}/core/ios/ios.mm)
 elseif(MSVC)
 
 	set(OX_HAVE_LIBJPEG 1)
