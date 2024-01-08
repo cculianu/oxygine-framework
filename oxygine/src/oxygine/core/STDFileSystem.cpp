@@ -10,6 +10,7 @@
 #include <unistd.h>
 #endif
 
+#include <cstdio> // for std::snprintf
 
 
 //#define LOGD(...) oxygine::logs::messageln(__VA_ARGS__)
@@ -157,7 +158,6 @@ namespace oxygine
         {
 #ifndef WIN32
             DIR* d = opendir(path);
-            size_t path_len = strlen(path);
             int r = -1;
 
             if (d)
@@ -169,7 +169,6 @@ namespace oxygine
                 while (!r && (p = readdir(d)))
                 {
                     int r2 = -1;
-                    char buf[512];
 
                     /* Skip the names "." and ".." as we don't want to recurse on them. */
                     if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
@@ -179,17 +178,17 @@ namespace oxygine
 
                     struct stat statbuf;
 
-                    sprintf(buf, "%s/%s", path, p->d_name);
+                    const std::string buf = std::string{path} + "/" + p->d_name;
 
-                    if (!stat(buf, &statbuf))
+                    if (!stat(buf.c_str(), &statbuf))
                     {
                         if (S_ISDIR(statbuf.st_mode))
                         {
-                            r2 = remove_directory(buf);
+                            r2 = remove_directory(buf.c_str());
                         }
                         else
                         {
-                            r2 = unlink(buf);
+                            r2 = unlink(buf.c_str());
                         }
                     }
 
@@ -258,7 +257,7 @@ namespace oxygine
         {
             buff[0] = 0;
 
-            sprintf(buff, "%s%s", _path.c_str(), path);
+            std::snprintf(buff, 512, "%s%s", _path.c_str(), path);
 
             return buff;
         }
@@ -282,7 +281,7 @@ namespace oxygine
         }
 
 
-        FileSystem::status STDFileSystem::_read(const char* file, file::buffer& dest, error_policy ep)
+        FileSystem::status STDFileSystem::_read(const char* file, file::buffer& dest, error_policy)
         {
             char buff[512];
 
@@ -298,7 +297,7 @@ namespace oxygine
             return status_ok;
         }
 
-        FileSystem::status STDFileSystem::_open(const char* file, const char* mode, error_policy ep, fileHandle*& fh)
+        FileSystem::status STDFileSystem::_open(const char* file, const char* mode, error_policy, fileHandle*& fh)
         {
             char buff[512];
 

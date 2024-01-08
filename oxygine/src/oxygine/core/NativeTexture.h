@@ -5,6 +5,8 @@
 #include "ox_debug.h"
 #include "../closure/closure.h"
 
+#include <atomic>
+
 namespace oxygine
 {
     class NativeTexture: public Texture, public Restorable
@@ -34,7 +36,7 @@ namespace oxygine
         static void dumpCreatedTextures();
         static std::vector<spNativeTexture> getCreatedTextures();
         /**debug counter of created textures*/
-        static volatile int created;
+        static std::atomic_int created;
     };
 
     class NativeTextureNull: public NativeTexture

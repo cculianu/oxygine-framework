@@ -200,7 +200,7 @@ namespace oxygine
         }
 
         _progressDispatched = true;
-        sync([ = ]()
+        sync([this, delta, loaded, total]()
         {
             _progressDispatched = false;
             dispatchProgress(delta + _progressDeltaDelayed, loaded, total);

@@ -68,14 +68,14 @@ namespace oxygine
         Vector2 sz = TreeInspector::calcBounds(this).size;
         setSize(sz);
 
-        addTouchDownListener([ = ](Event*)
+        addTouchDownListener([this](Event*)
         {
             _itemTree->setPriority(_stage->getLastChild()->getPriority());
             _itemTree->setPosition(getStage()->getSize() / 2 - _itemTree->getSize() / 2);
             _stage->addChild(_itemTree);
         });
 
-        addTouchUpListener([ = ](Event*)
+        addTouchUpListener([this](Event*)
         {
             _itemTree->detach();
         });

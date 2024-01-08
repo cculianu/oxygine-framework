@@ -10,7 +10,7 @@
 
 namespace oxygine
 {
-    Polygon::Polygon() : _verticesSize(0), _verticesData(0), _own(false), _vdecl(0)
+    Polygon::Polygon() : _vdecl(nullptr), _own(false), _verticesData(nullptr), _verticesSize(0)
     {
 
     }
@@ -80,7 +80,7 @@ namespace oxygine
 
 
 
-        _mat->apply2([ = ]()
+        _mat->apply2([this, &rs]()
         {
 
             STDRenderer* renderer = STDRenderer::getCurrent();

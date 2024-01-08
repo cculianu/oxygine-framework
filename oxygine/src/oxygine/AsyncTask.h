@@ -82,7 +82,7 @@ namespace oxygine
                         sleep(10);
 
 
-                    core::getMainThreadDispatcher().postCallback([ = ]()
+                    core::getMainThreadDispatcher().postCallback([this, f]()
                     {
                         f();
                         releaseRef();

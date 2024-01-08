@@ -518,7 +518,7 @@ namespace oxygine
         _sphookFirst = this;
         _sphookLast  = this;
 
-        hook = [ = ]()
+        hook = [this]()
         {
             _driver->setUniform("mat", _vp);
         };

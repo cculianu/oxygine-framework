@@ -20,7 +20,7 @@ namespace oxygine
     void AsyncTask::sync(const std::function< void()>& f)
     {
         addRef();
-        core::getMainThreadDispatcher().postCallback([ = ]()
+        core::getMainThreadDispatcher().postCallback([this, f]()
         {
             f();
             releaseRef();
@@ -43,7 +43,7 @@ namespace oxygine
         }
 
 
-        sync([ = ]()
+        sync([this, ok]()
         {
             if (ok)
                 _run();
@@ -87,7 +87,7 @@ namespace oxygine
 
     void AsyncTask::onComplete()
     {
-        sync([ = ]()
+        sync([this]()
         {
             _complete();
         });
@@ -95,7 +95,7 @@ namespace oxygine
 
     void AsyncTask::onError()
     {
-        sync([ = ]()
+        sync([this]()
         {
             _error();
         });

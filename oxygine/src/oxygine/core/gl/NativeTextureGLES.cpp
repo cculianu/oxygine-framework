@@ -107,14 +107,14 @@ namespace oxygine
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        NativeTextureGLES::created++;
+        ++NativeTextureGLES::created;
 
         CHECKGL();
 
         return id;
     }
 
-    NativeTextureGLES::NativeTextureGLES(): _id(0), _fbo(0), _width(0), _height(0), _format(TF_UNDEFINED), _lockFlags(0)
+    NativeTextureGLES::NativeTextureGLES(): _id(0), _fbo(0), _format(TF_UNDEFINED), _width(0), _height(0), _lockFlags(0)
     {
 
     }
@@ -234,7 +234,7 @@ namespace oxygine
     {
         if (_id)
         {
-            NativeTextureGLES::created--;
+            --NativeTextureGLES::created;
             glDeleteTextures(1, (GLuint*)&_id);
             _id = 0;
             CHECKGL();

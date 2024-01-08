@@ -7,7 +7,7 @@
 
 namespace oxygine
 {
-    volatile int NativeTexture::created = 0;
+    std::atomic_int NativeTexture::created = 0;
 
     void NativeTexture::dumpCreatedTextures()
     {
